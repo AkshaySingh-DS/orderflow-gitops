@@ -1,0 +1,11 @@
+apiVersion: v2
+name: orderflow
+version: 0.1.0
+appVersion: "1.0.0"
+description: Helm chart for the OrderFlow API
+keywords:
+  - fastapi
+  - orders
+  - kubernetes
+  - platform-engineering
+type: application

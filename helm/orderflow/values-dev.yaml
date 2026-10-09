@@ -1,8 +1,8 @@
 # K3s/dev environment values. CI updates image.repository and image.tag after a verified ECR push.
 
 image:
-  repository: 998038917906.dkr.ecr.ap-southeast-2.amazonaws.com/orderflow-api
-  tag: sha-aaa353542c9b372f4559ff5ce128a64e81f3b841
+  repository: 934225420324.dkr.ecr.ap-southeast-2.amazonaws.com/orderflow-api
+  tag: sha-560613fc2c8cd5dee6ab41c33f6d75c2a4adc6c3
 
 ingress:
   enabled: true

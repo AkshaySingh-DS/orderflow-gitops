@@ -5,7 +5,7 @@ image:
   tag: bootstrap
   pullPolicy: IfNotPresent
   pullSecrets:
-    - ecr-pull-secret
+    - name: ecr-pull-secret
 
 serviceAccount:
   create: true

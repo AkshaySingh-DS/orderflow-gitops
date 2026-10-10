@@ -2,7 +2,7 @@
 
 image:
   repository: 934225420324.dkr.ecr.ap-southeast-2.amazonaws.com/orderflow-api
-  tag: bootstrap
+  tag: sha-1d0d3ae1efae4576ee0c353cc58c60865d8b4a68
 
 ingress:
   enabled: true

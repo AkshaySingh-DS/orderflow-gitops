@@ -74,7 +74,7 @@ postgresql:
     tag: "17-alpine"
     pullPolicy: IfNotPresent
   servicePort: 5432
-  existingSecretName: orderflow-db
+  existingSecretName: orderflow-db-secret
   databaseKey: POSTGRES_DB
   usernameKey: POSTGRES_USER
   passwordKey: POSTGRES_PASSWORD

@@ -4,6 +4,8 @@ image:
   repository: REPLACE_WITH_ECR_REGISTRY/orderflow-api
   tag: bootstrap
   pullPolicy: IfNotPresent
+  pullSecrets:
+    - ecr-registry
 
 serviceAccount:
   create: true
@@ -62,8 +64,31 @@ probes:
     failureThreshold: 3
 
 migrations:
-  enabled: false
+  enabled: true
   backoffLimit: 4
+
+postgresql:
+  enabled: true
+  image:
+    repository: postgres
+    tag: "17-alpine"
+    pullPolicy: IfNotPresent
+  servicePort: 5432
+  existingSecretName: orderflow-db
+  databaseKey: POSTGRES_DB
+  usernameKey: POSTGRES_USER
+  passwordKey: POSTGRES_PASSWORD
+  storage:
+    size: 5Gi
+    storageClass: local-path
+  resources:
+    requests:
+      cpu: 100m
+      memory: 256Mi
+    limits:
+      cpu: 500m
+      memory: 512Mi
+
 
 podSecurityContext:
   runAsNonRoot: true

@@ -1,7 +1,7 @@
 # K3s/dev environment values. CI updates image.repository and image.tag after a verified ECR push.
 
 image:
-  repository: REPLACE_WITH_ECR_REGISTRY/orderflow-api
+  repository: 934225420324.dkr.ecr.ap-southeast-2.amazonaws.com/orderflow-api
   tag: bootstrap
 
 ingress:

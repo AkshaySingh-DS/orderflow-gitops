@@ -13,7 +13,7 @@ spec:
       labels:
         {{- include "orderflow.selectorLabels" . | nindent 8 }}
     spec:
-      restartPolicy: always
+      restartPolicy: OnFailure
       serviceAccountName: {{ include "orderflow.serviceAccountName" . }}
       automountServiceAccountToken: false
       securityContext:

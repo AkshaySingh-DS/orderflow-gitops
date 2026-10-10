@@ -5,7 +5,7 @@ image:
   tag: bootstrap
   pullPolicy: IfNotPresent
   pullSecrets:
-    - ecr-registry
+    - ecr-pull-secret
 
 serviceAccount:
   create: true
@@ -15,7 +15,7 @@ environment:
   ENVIRONMENT: production
   LOG_LEVEL: INFO
 
-existingSecretName: orderflow-db
+existingSecretName: orderflow-db-secret
 existingSecretKey: DATABASE_URL
 
 service:

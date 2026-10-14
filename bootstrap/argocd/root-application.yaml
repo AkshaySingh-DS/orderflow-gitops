@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+
+metadata:
+  name: orderflow-platform-root
+  namespace: argocd
+
+spec:
+  # Bootstrap root Application.
+  # Protect the source repository with branch protection and reviews.
+  project: default
+
+  source:
+    repoURL: https://github.com/AkshaySingh-DS/orderflow-gitops
+    targetRevision: main
+    path: argocd
+
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true

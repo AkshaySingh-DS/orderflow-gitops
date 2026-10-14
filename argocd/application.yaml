@@ -1,0 +1,25 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: orderflow
+  namespace: argocd
+spec:
+  project: orderflow
+  source:
+    repoURL: https://github.com/AkshaySingh-DS/orderflow-gitops
+    targetRevision: main
+    path: helm/orderflow
+    helm:
+      releaseName: orderflow
+      valueFiles:
+        - values-dev.yaml
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: orderflow
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - PruneLast=true

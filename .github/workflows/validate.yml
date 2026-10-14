@@ -1,3 +1,4 @@
+
 name: GitOps Validation
 
 on:
@@ -13,41 +14,404 @@ permissions:
   contents: read
 
 concurrency:
-  group: gitops-validation-${{ github.ref }}
+  group: gitops-validation-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
   validate:
-    name: Validate Helm and Kubernetes manifests
+    name: Validate GitOps manifests and Helm charts
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 15
 
     steps:
       - name: Checkout GitOps repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          fetch-depth: 1
+          fetch-depth: 0
           persist-credentials: false
 
-      - name: Set up Helm
-        uses: azure/setup-helm@v5.0.1
-        with:
-          version: v4.3.0
-
-      - name: Lint Helm chart
+      - name: Install pinned validation tools
+        shell: bash
         run: |
+          set -euo pipefail
+
+          mkdir -p "$RUNNER_TEMP/bin"
+
+          # Use the Helm version matching the Argo CD 3.5 renderer.
+          HELM_VERSION="v4.2.0"
+          HELM_ARCHIVE="helm-${HELM_VERSION}-linux-amd64.tar.gz"
+
+          curl -fsSLo "$RUNNER_TEMP/$HELM_ARCHIVE" \
+            "https://get.helm.sh/$HELM_ARCHIVE"
+
+          curl -fsSLo "$RUNNER_TEMP/${HELM_ARCHIVE}.sha256sum" \
+            "https://get.helm.sh/${HELM_ARCHIVE}.sha256sum"
+
+          (
+            cd "$RUNNER_TEMP"
+            sha256sum --check "${HELM_ARCHIVE}.sha256sum"
+          )
+
+          tar -xzf "$RUNNER_TEMP/$HELM_ARCHIVE" \
+            -C "$RUNNER_TEMP"
+
+          install -m 0755 \
+            "$RUNNER_TEMP/linux-amd64/helm" \
+            "$RUNNER_TEMP/bin/helm"
+
+          # Pin Kustomize instead of relying on the runner's default.
+          KUSTOMIZE_VERSION="v5.8.2"
+
+          curl -fsSLo "$RUNNER_TEMP/kustomize.tar.gz" \
+            "https://github.com/kubernetes-sigs/kustomize/releases/download/kustomize%2F${KUSTOMIZE_VERSION}/kustomize_${KUSTOMIZE_VERSION}_linux_amd64.tar.gz"
+
+          tar -xzf "$RUNNER_TEMP/kustomize.tar.gz" \
+            -C "$RUNNER_TEMP/bin" kustomize
+
+          # Pin Mike Farah yq for static YAML parsing and CI checks.
+          YQ_VERSION="v4.53.6"
+
+          curl -fsSLo "$RUNNER_TEMP/bin/yq" \
+            "https://github.com/mikefarah/yq/releases/download/${YQ_VERSION}/yq_linux_amd64"
+
+          chmod 0755 "$RUNNER_TEMP/bin/yq"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+
+          "$RUNNER_TEMP/bin/helm" version --short
+          "$RUNNER_TEMP/bin/kustomize" version
+          "$RUNNER_TEMP/bin/yq" --version
+
+      # Catch YAML syntax errors before rendering manifests.
+      - name: Validate static YAML syntax
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          while IFS= read -r -d '' file; do
+            echo "Checking YAML: $file"
+            yq eval '.' "$file" > /dev/null
+          done < <(
+            find .github/workflows argocd bootstrap addons helm/orderflow \
+              -type f \
+              \( -name '*.yaml' -o -name '*.yml' \) \
+              ! -path 'helm/orderflow/templates/*' \
+              -print0
+          )
+
+      # Render Argo CD Applications and AppProjects; catch missing resource paths.
+      - name: Build Argo CD Kustomize configuration
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          kustomize build argocd \
+            > "$RUNNER_TEMP/argocd-rendered.yaml"
+
+          test -s "$RUNNER_TEMP/argocd-rendered.yaml"
+
+          echo "Argo CD configuration rendered successfully."
+      # Render local dashboards and alert rules without deploying them.
+      - name: Build observability resources
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          kustomize build addons/observability/resources \
+            > "$RUNNER_TEMP/observability-resources.yaml"
+
+          test -s "$RUNNER_TEMP/observability-resources.yaml"
+
+          echo "Observability resources rendered successfully."
+
+      # Verify the bootstrap Application points to a valid GitOps path.
+      - name: Validate bootstrap root Application
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          ROOT_APP="bootstrap/argocd/root-application.yaml"
+
+          test -f "$ROOT_APP"
+
+          test "$(yq -r '.kind' "$ROOT_APP")" = "Application"
+          test "$(yq -r '.apiVersion' "$ROOT_APP")" \
+            = "argoproj.io/v1alpha1"
+
+          ROOT_REPO="$(yq -r '.spec.source.repoURL // ""' "$ROOT_APP")"
+          ROOT_PATH="$(yq -r '.spec.source.path // ""' "$ROOT_APP")"
+
+          test -n "$ROOT_REPO"
+          test -n "$ROOT_PATH"
+
+          # This design uses the current GitOps repository only.
+          if [[ "$ROOT_REPO" != *"$GITHUB_REPOSITORY"* ]]; then
+            echo "::error file=$ROOT_APP::Root Application repoURL does not point to the current GitOps repository."
+            exit 1
+          fi
+
+          # Argo CD source paths are relative to the repository root.
+          if [[ "$ROOT_PATH" = /* || "$ROOT_PATH" == ".." || \
+                "$ROOT_PATH" == ../* || "$ROOT_PATH" == */../* ]]; then
+            echo "::error file=$ROOT_APP::Root Application source.path must be a safe repository-relative path."
+            exit 1
+          fi
+
+          if [[ ! -d "$ROOT_PATH" ]]; then
+            echo "::error file=$ROOT_APP::Source path '$ROOT_PATH' does not exist in this repository."
+            exit 1
+          fi
+
+          if [[ ! -f "$ROOT_PATH/kustomization.yaml" && \
+                ! -f "$ROOT_PATH/kustomization.yml" && \
+                ! -f "$ROOT_PATH/Kustomization" ]]; then
+            echo "::error file=$ROOT_APP::Root source path must contain a Kustomize entry point."
+            exit 1
+          fi
+
+          kustomize build "$ROOT_PATH" \
+            > "$RUNNER_TEMP/root-application-rendered.yaml"
+
+          test -s "$RUNNER_TEMP/root-application-rendered.yaml"
+
+        # Check repository-local source paths declared by Argo CD Applications.
+      - name: Validate local Argo CD source paths
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          for app in \
+            argocd/application.yaml \
+            argocd/applications/observability/*.yaml
+          do
+            [[ -f "$app" ]] || continue
+
+            mapfile -t local_paths < <(
+              yq -r '
+                (.spec.sources // [.spec.source])[]
+                | select(.path != null and .chart == null)
+                | .path
+              ' "$app"
+            )
+
+            for source_path in "${local_paths[@]}"; do
+              if [[ ! -d "$source_path" ]]; then
+                echo "::error file=$app::Local source path '$source_path' does not exist."
+                exit 1
+              fi
+            done
+          done
+
+      # Lint and render OrderFlow using its development values.
+      - name: Lint OrderFlow Helm chart
+        shell: bash
+        run: |
+          set -euo pipefail
+
           helm lint helm/orderflow \
             -f helm/orderflow/values-dev.yaml \
             --strict
 
-      - name: Render Kubernetes manifests
+      - name: Render OrderFlow Kubernetes manifests
+        shell: bash
         run: |
-          helm template orderflow helm/orderflow \
-            -f helm/orderflow/values-dev.yaml \
-            > /tmp/orderflow-rendered.yaml
+          set -euo pipefail
 
-      - name: Check rendered manifest is non-empty
-        run: test -s /tmp/orderflow-rendered.yaml
+          APP_NAMESPACE="$(
+            yq -r '.spec.destination.namespace // "orderflow"' \
+              argocd/application.yaml
+          )"
+
+          helm template orderflow helm/orderflow \
+            --namespace "$APP_NAMESPACE" \
+            -f helm/orderflow/values-dev.yaml \
+            --include-crds \
+            > "$RUNNER_TEMP/orderflow-rendered.yaml"
+
+          test -s "$RUNNER_TEMP/orderflow-rendered.yaml"
+
+      # Lint and render pinned observability charts with their declared values.
+      - name: Validate observability Helm charts
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          shopt -s nullglob
+
+          for app in argocd/applications/observability/*.yaml; do
+            app_name="$(yq -r '.metadata.name // ""' "$app")"
+
+            mapfile -t chart_sources < <(
+              yq -r '
+                (.spec.sources // [.spec.source])[]
+                | select(.chart != null)
+                | [.repoURL, .chart, .targetRevision]
+                | @tsv
+              ' "$app"
+            )
+
+            # The resources Application uses Kustomize, not a Helm chart.
+            if ((${#chart_sources[@]} == 0)); then
+              echo "No Helm chart source in $app_name; skipping Helm rendering."
+              continue
+            fi
+
+            # Do not silently ignore inline Helm overrides.
+            if yq -e '
+              (.spec.sources // [.spec.source])[]
+              | select(.chart != null)
+              | (.helm // {})
+              | select(
+                  .values != null
+                  or .valuesObject != null
+                  or ((.parameters // []) | length > 0)
+                  or ((.fileParameters // []) | length > 0)
+                )
+            ' "$app" > /dev/null 2>&1; then
+              echo "::error file=$app::Extend the CI renderer to support inline Helm values or parameters before using this Application."
+              exit 1
+            fi
+
+            source_index=0
+
+            for source in "${chart_sources[@]}"; do
+              IFS=$'\t' read -r repo_url chart_name chart_version \
+                <<< "$source"
+
+              if [[ -z "$repo_url" || -z "$chart_name" || \
+                    -z "$chart_version" || "$chart_version" == "null" ]]; then
+                echo "::error file=$app::Helm repoURL, chart and targetRevision must be set."
+                exit 1
+              fi
+
+              SAFE_NAME="$(
+                printf '%s' "${app_name}-${source_index}" \
+                  | tr '[:upper:]' '[:lower:]' \
+                  | sed 's/[^a-z0-9-]/-/g'
+              )"
+
+              CHART_DIR="$RUNNER_TEMP/observability-charts/$SAFE_NAME"
+              mkdir -p "$CHART_DIR"
+
+              if [[ "$repo_url" == https://* || \
+                    "$repo_url" == http://* ]]; then
+
+                REPO_ALIAS="ci-$SAFE_NAME"
+
+                helm repo add "$REPO_ALIAS" "$repo_url" \
+                  --force-update
+
+                helm repo update "$REPO_ALIAS"
+
+                helm pull "$REPO_ALIAS/$chart_name" \
+                  --version "$chart_version" \
+                  --untar \
+                  --untardir "$CHART_DIR"
+              else
+                # Argo CD OCI URLs may omit the oci:// prefix.
+                OCI_BASE="${repo_url#oci://}"
+                OCI_BASE="${OCI_BASE%/}"
+
+                helm pull "oci://${OCI_BASE}/${chart_name}" \
+                  --version "$chart_version" \
+                  --untar \
+                  --untardir "$CHART_DIR"
+              fi
+
+              CHART_PATH="$CHART_DIR/$chart_name"
+
+              if [[ ! -f "$CHART_PATH/Chart.yaml" ]]; then
+                CHART_PATH="$(
+                  find "$CHART_DIR" \
+                    -mindepth 2 -maxdepth 2 \
+                    -type f -name Chart.yaml \
+                    -not -path '*/charts/*' \
+                    -print -quit \
+                    | xargs -r dirname
+                )"
+              fi
+
+              if [[ ! -f "$CHART_PATH/Chart.yaml" ]]; then
+                echo "::error file=$app::Unable to locate downloaded Helm chart '$chart_name'."
+                exit 1
+              fi
+
+              HELM_ARGS=()
+
+              mapfile -t values_files < <(
+                yq -r '
+                  (.spec.sources // [.spec.source])[]
+                  | select(.chart != null)
+                  | (.helm.valueFiles // [])[]
+                ' "$app"
+              )
+
+              for value_ref in "${values_files[@]}"; do
+                case "$value_ref" in
+                  '$values/'*)
+                    VALUE_PATH="${value_ref#\$values/}"
+                    ;;
+                  *)
+                    VALUE_PATH="$value_ref"
+                    ;;
+                esac
+
+                if [[ -f "$VALUE_PATH" ]]; then
+                  HELM_ARGS+=(--values "$VALUE_PATH")
+                elif [[ -f "$CHART_PATH/$VALUE_PATH" ]]; then
+                  HELM_ARGS+=(--values "$CHART_PATH/$VALUE_PATH")
+                else
+                  echo "::error file=$app::Helm values file '$value_ref' could not be found."
+                  exit 1
+                fi
+              done
+
+              echo "Linting $app_name: $chart_name@$chart_version"
+
+              helm lint "$CHART_PATH" "${HELM_ARGS[@]}"
+
+              RELEASE_NAME="$(
+                yq -r '
+                  (.spec.sources // [.spec.source])[]
+                  | select(.chart != null)
+                  | (.helm // {})
+                  | .releaseName // ""
+                ' "$app" | head -n 1
+              )"
+
+              [[ -n "$RELEASE_NAME" ]] || RELEASE_NAME="$app_name"
+
+              APP_NAMESPACE="$(
+                yq -r '.spec.destination.namespace // "default"' "$app"
+              )"
+
+              helm template "$RELEASE_NAME" "$CHART_PATH" \
+                --namespace "$APP_NAMESPACE" \
+                --include-crds \
+                "${HELM_ARGS[@]}" \
+                > "$RUNNER_TEMP/${SAFE_NAME}-rendered.yaml"
+
+              test -s "$RUNNER_TEMP/${SAFE_NAME}-rendered.yaml"
+
+              source_index=$((source_index + 1))
+            done
+          done
 
       - name: Verify Git whitespace
-        run: git diff --check
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BEFORE_SHA: ${{ github.event.before }}
+          CURRENT_SHA: ${{ github.sha }}
+        run: |
+          set -euo pipefail
+
+          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+            git diff --check "$PR_BASE_SHA...$CURRENT_SHA"
+          elif [[ "$EVENT_NAME" == "push" && \
+                  "$PUSH_BEFORE_SHA" != \
+                  "0000000000000000000000000000000000000000" ]]; then
+            git diff --check "$PUSH_BEFORE_SHA" "$CURRENT_SHA"
+          else
+            git diff --check "${CURRENT_SHA}^" "$CURRENT_SHA"
+          fi

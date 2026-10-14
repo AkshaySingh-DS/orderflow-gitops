@@ -1,0 +1,10 @@
+[Unit]
+Description=Refresh OrderFlow ECR image pull secret every 8 hours
+
+[Timer]
+OnBootSec=5min
+OnUnitActiveSec=8h
+Persistent=true
+
+[Install]
+WantedBy=timers.target

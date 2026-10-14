@@ -1,0 +1,40 @@
+# This tells Argo CD to read the Kustomize resources from your GitOps repository and apply them to the
+# monitoring namespace.
+
+# apiVersion: argoproj.io/v1alpha1
+# kind: Application
+
+# metadata:
+#   name: observability-resources
+#   namespace: argocd
+
+# spec:
+#   project: observability
+
+#   source:
+#     repoURL:  https://github.com/AkshaySingh-DS/orderflow-gitops
+#     targetRevision: main
+#     path: addons/observability/resources
+
+#   destination:
+#     server: https://kubernetes.default.svc
+#     namespace: monitoring
+
+#   syncPolicy:
+#     automated:
+#       prune: true
+#       selfHeal: true
+
+#     syncOptions:
+#       - PruneLast=true
+
+#     retry:
+#       limit: 5
+#       backoff:
+#         duration: 5s
+#         factor: 2
+#         maxDuration: 3m
+
+
+# Keep observability-resources.yaml commented out until the monitoring stack is 
+# healthy and the Prometheus Operator CRDs are established, as we discussed.

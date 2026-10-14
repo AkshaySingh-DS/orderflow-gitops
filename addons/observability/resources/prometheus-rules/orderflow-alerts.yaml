@@ -1,0 +1,55 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: orderflow-application-alerts
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+    app.kubernetes.io/name: orderflow
+spec:
+  groups:
+    - name: orderflow.application
+      rules:
+        - alert: OrderFlowTargetMissing
+          expr: up{job="orderflow"} == 0
+          for: 2m
+          labels:
+            severity: critical
+            service: orderflow
+          annotations:
+            summary: OrderFlow metrics target is unavailable
+            description: Prometheus has failed to scrape the OrderFlow API for at least two minutes.
+            runbook_url: https://github.com/REPLACE_WITH_GITHUB_OWNER/orderflow-platform-config/blob/main/README.md#troubleshooting
+
+        - alert: OrderFlowHigh5xxRate
+          expr: |
+            (
+              sum(rate(http_requests_total{job="orderflow", status="5xx"}[5m]))
+              /
+              clamp_min(sum(rate(http_requests_total{job="orderflow"}[5m])), 0.001)
+            ) > 0.05
+            and sum(rate(http_requests_total{job="orderflow"}[5m])) > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            service: orderflow
+          annotations:
+            summary: OrderFlow 5xx response ratio is above 5%
+            description: More than 5% of OrderFlow HTTP requests returned 5xx for 10 minutes, with sufficient request volume.
+            runbook_url: https://github.com/REPLACE_WITH_GITHUB_OWNER/orderflow-platform-config/blob/main/README.md#troubleshooting
+
+        - alert: OrderFlowHighP95Latency
+          expr: |
+            histogram_quantile(
+              0.95,
+              sum by (le) (rate(http_request_duration_seconds_bucket{job="orderflow"}[5m]))
+            ) > 0.5
+            and sum(rate(http_requests_total{job="orderflow"}[5m])) > 0.1
+          for: 10m
+          labels:
+            severity: warning
+            service: orderflow
+          annotations:
+            summary: OrderFlow p95 request latency exceeds 500 ms
+            description: The estimated p95 request latency has exceeded 500 ms for ten minutes under meaningful traffic.
+            runbook_url: https://github.com/REPLACE_WITH_GITHUB_OWNER/orderflow-platform-config/blob/main/README.md#troubleshooting

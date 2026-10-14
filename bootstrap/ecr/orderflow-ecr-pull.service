@@ -1,0 +1,9 @@
+[Unit]
+Description=Refresh OrderFlow ECR image pull secret
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+EnvironmentFile=/etc/orderflow/ecr.env
+ExecStart=/opt/orderflow/refresh-ecr-pull-secret.sh

@@ -1,0 +1,11 @@
+# This tells Kustomize to combine the OrderFlow Grafana dashboard and Prometheus alert rules 
+# into one Argo CD-managed application. Argo CD automatically detects Kustomize when that file exists at the Application's configured path
+
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: monitoring
+
+resources:
+  - dashboards/orderflow-overview.yaml
+  - prometheus-rules/orderflow-alerts.yaml

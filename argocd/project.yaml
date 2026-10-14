@@ -1,0 +1,15 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: orderflow
+  namespace: argocd
+spec:
+  description: OrderFlow deployment project
+  sourceRepos:
+    - https://github.com/AkshaySingh-DS/orderflow-gitops
+  destinations:
+    - namespace: orderflow
+      server: https://kubernetes.default.svc
+  clusterResourceWhitelist:
+    - group: ""
+      kind: Namespace

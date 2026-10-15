@@ -249,6 +249,11 @@ jobs:
               ' "$app"
             )
 
+            echo "Application: $app"
+            echo "Helm chart sources detected: ${#chart_sources[@]}"
+            printf 'Source: %s\n' "${chart_sources[@]}"
+
+            
             # The resources Application uses Kustomize, not a Helm chart.
             if ((${#chart_sources[@]} == 0)); then
               echo "No Helm chart source in $app_name; skipping Helm rendering."

@@ -243,8 +243,8 @@ jobs:
             mapfile -t chart_sources < <(
               yq -r '
                 (.spec.sources // [.spec.source])[]
-                | select(.chart != null)
-                | [.repoURL, .chart, .targetRevision]
+                | select(has("chart"))
+                | [.repoURL // "", .chart // "", .targetRevision // ""]
                 | @tsv
               ' "$app"
             )
@@ -258,7 +258,7 @@ jobs:
             # Do not silently ignore inline Helm overrides.
             if yq -e '
               (.spec.sources // [.spec.source])[]
-              | select(.chart != null)
+              | select((.chart // "") != "")
               | (.helm // {})
               | select(
                   .values != null
@@ -340,7 +340,7 @@ jobs:
               mapfile -t values_files < <(
                 yq -r '
                   (.spec.sources // [.spec.source])[]
-                  | select(.chart != null)
+                  | select((.chart // "") != "")
                   | (.helm.valueFiles // [])[]
                 ' "$app"
               )
@@ -372,7 +372,7 @@ jobs:
               RELEASE_NAME="$(
                 yq -r '
                   (.spec.sources // [.spec.source])[]
-                  | select(.chart != null)
+                  | select((.chart // "") != "")
                   | (.helm // {})
                   | .releaseName // ""
                 ' "$app" | head -n 1

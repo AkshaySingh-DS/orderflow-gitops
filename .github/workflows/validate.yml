@@ -243,7 +243,7 @@ jobs:
             mapfile -t chart_sources < <(
               yq -r '
                 (.spec.sources // [.spec.source])[]
-                | select(has("chart"))
+                | select((.chart // "") != "")
                 | [.repoURL // "", .chart // "", .targetRevision // ""]
                 | @tsv
               ' "$app"

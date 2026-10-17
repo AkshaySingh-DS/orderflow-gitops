@@ -23,6 +23,8 @@ spec:
   destinations:
     - server: https://kubernetes.default.svc
       namespace: monitoring
+    - server: https://kubernetes.default.svc
+      namespace: kube-system
 
   # Permit only the cluster-scoped resources required by the
   # monitoring stack and Prometheus Operator.

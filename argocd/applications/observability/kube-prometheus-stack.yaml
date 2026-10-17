@@ -26,3 +26,5 @@ spec:
     syncOptions:
       - CreateNamespace=true
       - PruneLast=true
+      - ServerSideApply=true #kube-prometheus-stack chart is being rejected because its Prometheus 
+      # Operator CRDs exceed Kubernetes' 256 KiB client-side apply annotation limit.

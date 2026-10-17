@@ -67,7 +67,7 @@ alloy:
       }
 
       loki.process "pod_logs" {
-        # Keep a small set of stable labels; do not label by request ID/order ID.
+        // Keep a small set of stable labels; do not label by request ID/order ID.
         stage.static_labels {
           values = {
             cluster     = "orderflow-k3s",

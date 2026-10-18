@@ -16,4 +16,4 @@ resources:
 
   # Enable in a follow-up commit, after the monitoring stack
   # is healthy and the required Prometheus Operator CRDs exist.
-  # - applications/observability/observability-resources.yaml
+  - applications/observability/observability-resources.yaml

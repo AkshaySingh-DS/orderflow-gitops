@@ -2,7 +2,6 @@
 set -euo pipefail
 
 : "${GITHUB_APP_ID:?Set GITHUB_APP_ID}"
-: "${GITHUB_APP_INSTALLATION_ID:?Set GITHUB_APP_INSTALLATION_ID}"
 : "${GITHUB_APP_PRIVATE_KEY_PATH:?Set GITHUB_APP_PRIVATE_KEY_PATH}"
 : "${GITOPS_REPO_URL:?Set GITOPS_REPO_URL}"
 
@@ -21,7 +20,6 @@ stringData:
   type: git
   url: ${GITOPS_REPO_URL}
   githubAppID: "${GITHUB_APP_ID}"
-  githubAppInstallationID: "${GITHUB_APP_INSTALLATION_ID}"
   githubAppPrivateKey: |
 $(printf '%s\n' "$PRIVATE_KEY" | sed 's/^/    /')
 MANIFEST

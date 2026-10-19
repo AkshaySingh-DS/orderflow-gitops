@@ -9,3 +9,4 @@ namespace: monitoring
 resources:
   - dashboards/orderflow-overview.yaml
   - prometheus-rules/orderflow-alerts.yaml
+  - servicemonitor-orderflow.yaml

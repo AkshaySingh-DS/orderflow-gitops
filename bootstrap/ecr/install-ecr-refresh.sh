@@ -21,7 +21,7 @@ AWS_REGION=${AWS_REGION}
 ECR_REGISTRY=${ECR_REGISTRY}
 NAMESPACE=orderflow
 SECRET_NAME=ecr-registry
-KUBECONFIG=/home/ubuntu/.kube/config
+KUBECONFIG=/home/ubuntu/.kube/config 
 ENV
 chmod 0600 /etc/orderflow/ecr.env
 

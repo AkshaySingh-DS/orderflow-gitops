@@ -1,0 +1,23 @@
+# This matches the labels and port name from your actual Service YAML. The release label 
+# belongs on the ServiceMonitor metadata, while the two app.kubernetes.io 
+# labels belong in its Service selector.
+
+apiVersion: monitoring.coreos.com/v1
+kind: ServiceMonitor
+metadata:
+  name: orderflow-api
+  namespace: monitoring
+  labels:
+    release: kube-prometheus-stack
+spec:
+  namespaceSelector:
+    matchNames:
+      - orderflow
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: orderflow
+      app.kubernetes.io/instance: orderflow
+  endpoints:
+    - port: http
+      path: /metrics
+      interval: 30s

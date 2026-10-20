@@ -11,7 +11,7 @@ spec:
     - name: orderflow.application
       rules:
         - alert: OrderFlowTargetMissing
-          expr: up{job="orderflow"} == 0
+          expr: absent(up{job="orderflow"})
           for: 2m
           labels:
             severity: critical
@@ -42,7 +42,8 @@ spec:
           expr: |
             histogram_quantile(
               0.95,
-              sum by (le) (rate(http_request_duration_seconds_bucket{job="orderflow"}[5m]))
+              sum by (le) (
+                rate(http_request_duration_highr_seconds_bucket{job="orderflow"}[5m])
             ) > 0.5
             and sum(rate(http_requests_total{job="orderflow"}[5m])) > 0.1
           for: 10m
@@ -53,3 +54,10 @@ spec:
             summary: OrderFlow p95 request latency exceeds 500 ms
             description: The estimated p95 request latency has exceeded 500 ms for ten minutes under meaningful traffic.
             runbook_url: https://github.com/REPLACE_WITH_GITHUB_OWNER/orderflow-platform-config/blob/main/README.md#troubleshooting
+
+        - alert: OrderFlowTargetDown
+          expr: up{job="orderflow"} == 0
+          for: 2m
+          labels:
+            service: orderflow
+            severity: critical

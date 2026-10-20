@@ -10,6 +10,7 @@ metadata:
   labels:
     release: kube-prometheus-stack
 spec:
+  jobLabel: app.kubernetes.io/name
   namespaceSelector:
     matchNames:
       - orderflow

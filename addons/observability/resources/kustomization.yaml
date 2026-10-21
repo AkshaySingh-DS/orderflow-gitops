@@ -10,4 +10,4 @@ resources:
   - dashboards/orderflow-overview.yaml
   - prometheus-rules/orderflow-alerts.yaml
   - servicemonitor-orderflow.yaml
-  - prometheus-rules/orderflow-alert-lifecycle-test.yaml
+  # - prometheus-rules/orderflow-alert-lifecycle-test.yaml

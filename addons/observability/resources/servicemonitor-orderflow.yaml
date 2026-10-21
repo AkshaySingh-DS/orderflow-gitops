@@ -20,5 +20,5 @@ spec:
       app.kubernetes.io/instance: orderflow
   endpoints:
     - port: http
-      path: /metrics-sre-test
+      path: /metrics
       interval: 30s

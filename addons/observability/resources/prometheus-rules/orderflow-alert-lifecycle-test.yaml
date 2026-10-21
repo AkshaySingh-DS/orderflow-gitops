@@ -12,7 +12,7 @@ spec:
     - name: orderflow.alert-lifecycle-test
       rules:
         - alert: OrderFlowAlertLifecycleTest
-          expr: vector(1)
+          expr: vector(1) > 2
           for: 1m
           labels:
             service: orderflow

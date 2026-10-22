@@ -4,151 +4,452 @@ metadata:
   name: orderflow-overview-dashboard
   namespace: monitoring
   labels:
-    grafana_dashboard: '1'
+    grafana_dashboard: "1"
     app.kubernetes.io/name: orderflow
     app.kubernetes.io/part-of: orderflow-platform
 data:
-  orderflow-overview.json: "{\n  \"annotations\": {\n    \"list\": [\n      {\n  \
-    \      \"builtIn\": 1,\n        \"datasource\": {\n          \"type\": \"grafana\"\
-    ,\n          \"uid\": \"-- Grafana --\"\n        },\n        \"enable\": true,\n\
-    \        \"hide\": true,\n        \"iconColor\": \"rgba(0, 211, 255, 1)\",\n \
-    \       \"name\": \"Annotations & Alerts\",\n        \"type\": \"dashboard\"\n\
-    \      }\n    ]\n  },\n  \"description\": \"OrderFlow RED metrics (rate, errors,\
-    \ duration), pod saturation and logs for the K3s portfolio cluster.\",\n  \"editable\"\
-    : true,\n  \"fiscalYearStartMonth\": 0,\n  \"graphTooltip\": 1,\n  \"id\": null,\n\
-    \  \"links\": [],\n  \"liveNow\": false,\n  \"panels\": [\n    {\n      \"id\"\
-    : 1,\n      \"title\": \"HTTP request rate\",\n      \"type\": \"timeseries\"\
-    ,\n      \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\"\
-    : \"prometheus\"\n      },\n      \"gridPos\": [\n        0,\n        0,\n   \
-    \     12,\n        7\n      ],\n      \"targets\": [\n        {\n          \"\
-    expr\": \"sum(rate(http_requests_total{job=\\\"orderflow\\\"}[5m]))\",\n     \
-    \     \"refId\": \"A\",\n          \"legendFormat\": \"\"\n        }\n      ],\n\
-    \      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"reqps\"\
-    ,\n          \"color\": {\n            \"mode\": \"palette-classic\"\n       \
-    \   },\n          \"custom\": {\n            \"drawStyle\": \"line\",\n      \
-    \      \"lineInterpolation\": \"smooth\",\n            \"lineWidth\": 2,\n   \
-    \         \"fillOpacity\": 10,\n            \"showPoints\": \"never\",\n     \
-    \       \"spanNulls\": false\n          }\n        },\n        \"overrides\":\
-    \ []\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\"\
-    : \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n\
-    \        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n        \
-    \  \"sort\": \"desc\"\n        }\n      }\n    },\n    {\n      \"id\": 2,\n \
-    \     \"title\": \"HTTP 5xx ratio\",\n      \"type\": \"timeseries\",\n      \"\
-    datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\
-    \n      },\n      \"gridPos\": [\n        12,\n        0,\n        12,\n     \
-    \   7\n      ],\n      \"targets\": [\n        {\n          \"expr\": \"100 *\
-    \ sum(rate(http_requests_total{job=\\\"orderflow\\\",status=\\\"5xx\\\"}[5m]))\
-    \ / clamp_min(sum(rate(http_requests_total{job=\\\"orderflow\\\"}[5m])), 0.001)\"\
-    ,\n          \"refId\": \"A\",\n          \"legendFormat\": \"\"\n        }\n\
-    \      ],\n      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\"\
-    : \"percent\",\n          \"color\": {\n            \"mode\": \"palette-classic\"\
-    \n          },\n          \"custom\": {\n            \"drawStyle\": \"line\",\n\
-    \            \"lineInterpolation\": \"smooth\",\n            \"lineWidth\": 2,\n\
-    \            \"fillOpacity\": 10,\n            \"showPoints\": \"never\",\n  \
-    \          \"spanNulls\": false\n          }\n        },\n        \"overrides\"\
-    : []\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\"\
-    : \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n\
-    \        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n        \
-    \  \"sort\": \"desc\"\n        }\n      }\n    },\n    {\n      \"id\": 3,\n \
-    \     \"title\": \"P95 request latency\",\n      \"type\": \"timeseries\",\n \
-    \     \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"\
-    prometheus\"\n      },\n      \"gridPos\": [\n        0,\n        7,\n       \
-    \ 12,\n        7\n      ],\n      \"targets\": [\n        {\n          \"expr\"\
-    : \"histogram_quantile(0.95, sum by (le) (rate(http_request_duration_seconds_bucket{job=\\\
-    \"orderflow\\\"}[5m])))\",\n          \"refId\": \"A\",\n          \"legendFormat\"\
-    : \"\"\n        }\n      ],\n      \"fieldConfig\": {\n        \"defaults\": {\n\
-    \          \"unit\": \"s\",\n          \"color\": {\n            \"mode\": \"\
-    palette-classic\"\n          },\n          \"custom\": {\n            \"drawStyle\"\
-    : \"line\",\n            \"lineInterpolation\": \"smooth\",\n            \"lineWidth\"\
-    : 2,\n            \"fillOpacity\": 10,\n            \"showPoints\": \"never\"\
-    ,\n            \"spanNulls\": false\n          }\n        },\n        \"overrides\"\
-    : []\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\"\
-    : \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n\
-    \        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n        \
-    \  \"sort\": \"desc\"\n        }\n      }\n    },\n    {\n      \"id\": 4,\n \
-    \     \"title\": \"Requests by status\",\n      \"type\": \"timeseries\",\n  \
-    \    \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"\
-    prometheus\"\n      },\n      \"gridPos\": [\n        12,\n        7,\n      \
-    \  12,\n        7\n      ],\n      \"targets\": [\n        {\n          \"expr\"\
-    : \"sum by (status) (rate(http_requests_total{job=\\\"orderflow\\\"}[5m]))\",\n\
-    \          \"refId\": \"A\",\n          \"legendFormat\": \"{{status}}\"\n   \
-    \     }\n      ],\n      \"fieldConfig\": {\n        \"defaults\": {\n       \
-    \   \"unit\": \"reqps\",\n          \"color\": {\n            \"mode\": \"palette-classic\"\
-    \n          },\n          \"custom\": {\n            \"drawStyle\": \"line\",\n\
-    \            \"lineInterpolation\": \"smooth\",\n            \"lineWidth\": 2,\n\
-    \            \"fillOpacity\": 10,\n            \"showPoints\": \"never\",\n  \
-    \          \"spanNulls\": false\n          }\n        },\n        \"overrides\"\
-    : []\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\"\
-    : \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n\
-    \        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n        \
-    \  \"sort\": \"desc\"\n        }\n      }\n    },\n    {\n      \"id\": 5,\n \
-    \     \"title\": \"CPU cores by pod\",\n      \"type\": \"timeseries\",\n    \
-    \  \"datasource\": {\n        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\
-    \n      },\n      \"gridPos\": [\n        0,\n        14,\n        12,\n     \
-    \   7\n      ],\n      \"targets\": [\n        {\n          \"expr\": \"sum by\
-    \ (pod) (rate(container_cpu_usage_seconds_total{namespace=\\\"orderflow\\\",container!=\\\
-    \"\\\",container!=\\\"POD\\\"}[5m]))\",\n          \"refId\": \"A\",\n       \
-    \   \"legendFormat\": \"{{pod}}\"\n        }\n      ],\n      \"fieldConfig\"\
-    : {\n        \"defaults\": {\n          \"unit\": \"cores\",\n          \"color\"\
-    : {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\"\
-    : {\n            \"drawStyle\": \"line\",\n            \"lineInterpolation\":\
-    \ \"smooth\",\n            \"lineWidth\": 2,\n            \"fillOpacity\": 10,\n\
-    \            \"showPoints\": \"never\",\n            \"spanNulls\": false\n  \
-    \        }\n        },\n        \"overrides\": []\n      },\n      \"options\"\
-    : {\n        \"legend\": {\n          \"displayMode\": \"list\",\n          \"\
-    placement\": \"bottom\",\n          \"showLegend\": true\n        },\n       \
-    \ \"tooltip\": {\n          \"mode\": \"multi\",\n          \"sort\": \"desc\"\
-    \n        }\n      }\n    },\n    {\n      \"id\": 6,\n      \"title\": \"Working-set\
-    \ memory by pod\",\n      \"type\": \"timeseries\",\n      \"datasource\": {\n\
-    \        \"type\": \"prometheus\",\n        \"uid\": \"prometheus\"\n      },\n\
-    \      \"gridPos\": [\n        12,\n        14,\n        12,\n        7\n    \
-    \  ],\n      \"targets\": [\n        {\n          \"expr\": \"sum by (pod) (container_memory_working_set_bytes{namespace=\\\
-    \"orderflow\\\",container!=\\\"\\\",container!=\\\"POD\\\"})\",\n          \"\
-    refId\": \"A\",\n          \"legendFormat\": \"{{pod}}\"\n        }\n      ],\n\
-    \      \"fieldConfig\": {\n        \"defaults\": {\n          \"unit\": \"bytes\"\
-    ,\n          \"color\": {\n            \"mode\": \"palette-classic\"\n       \
-    \   },\n          \"custom\": {\n            \"drawStyle\": \"line\",\n      \
-    \      \"lineInterpolation\": \"smooth\",\n            \"lineWidth\": 2,\n   \
-    \         \"fillOpacity\": 10,\n            \"showPoints\": \"never\",\n     \
-    \       \"spanNulls\": false\n          }\n        },\n        \"overrides\":\
-    \ []\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\"\
-    : \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n\
-    \        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n        \
-    \  \"sort\": \"desc\"\n        }\n      }\n    },\n    {\n      \"id\": 7,\n \
-    \     \"title\": \"Container restarts (current counter)\",\n      \"type\": \"\
-    timeseries\",\n      \"datasource\": {\n        \"type\": \"prometheus\",\n  \
-    \      \"uid\": \"prometheus\"\n      },\n      \"gridPos\": [\n        0,\n \
-    \       21,\n        12,\n        7\n      ],\n      \"targets\": [\n        {\n\
-    \          \"expr\": \"sum by (pod) (kube_pod_container_status_restarts_total{namespace=\\\
-    \"orderflow\\\"})\",\n          \"refId\": \"A\",\n          \"legendFormat\"\
-    : \"{{pod}}\"\n        }\n      ],\n      \"fieldConfig\": {\n        \"defaults\"\
-    : {\n          \"unit\": \"short\",\n          \"color\": {\n            \"mode\"\
-    : \"palette-classic\"\n          },\n          \"custom\": {\n            \"drawStyle\"\
-    : \"line\",\n            \"lineInterpolation\": \"smooth\",\n            \"lineWidth\"\
-    : 2,\n            \"fillOpacity\": 10,\n            \"showPoints\": \"never\"\
-    ,\n            \"spanNulls\": false\n          }\n        },\n        \"overrides\"\
-    : []\n      },\n      \"options\": {\n        \"legend\": {\n          \"displayMode\"\
-    : \"list\",\n          \"placement\": \"bottom\",\n          \"showLegend\": true\n\
-    \        },\n        \"tooltip\": {\n          \"mode\": \"multi\",\n        \
-    \  \"sort\": \"desc\"\n        }\n      }\n    },\n    {\n      \"id\": 8,\n \
-    \     \"title\": \"Recent OrderFlow logs\",\n      \"type\": \"logs\",\n     \
-    \ \"datasource\": {\n        \"type\": \"loki\",\n        \"uid\": \"loki\"\n\
-    \      },\n      \"gridPos\": [\n        12,\n        21,\n        12,\n     \
-    \   10\n      ],\n      \"targets\": [\n        {\n          \"expr\": \"{namespace=\\\
-    \"orderflow\\\", app=\\\"orderflow\\\"}\",\n          \"refId\": \"A\",\n    \
-    \      \"legendFormat\": \"\"\n        }\n      ],\n      \"fieldConfig\": {\n\
-    \        \"defaults\": {\n          \"unit\": \"short\",\n          \"color\"\
-    : {\n            \"mode\": \"palette-classic\"\n          },\n          \"custom\"\
-    : {\n            \"drawStyle\": \"line\",\n            \"lineInterpolation\":\
-    \ \"smooth\",\n            \"lineWidth\": 2,\n            \"fillOpacity\": 10,\n\
-    \            \"showPoints\": \"never\",\n            \"spanNulls\": false\n  \
-    \        }\n        },\n        \"overrides\": []\n      },\n      \"options\"\
-    : {\n        \"showTime\": true,\n        \"showLabels\": true,\n        \"showCommonLabels\"\
-    : false,\n        \"wrapLogMessage\": true,\n        \"enableLogDetails\": true,\n\
-    \        \"dedupStrategy\": \"none\",\n        \"sortOrder\": \"Descending\"\n\
-    \      }\n    }\n  ],\n  \"refresh\": \"30s\",\n  \"schemaVersion\": 41,\n  \"\
-    tags\": [\n    \"orderflow\",\n    \"observability\",\n    \"k3s\"\n  ],\n  \"\
-    templating\": {\n    \"list\": []\n  },\n  \"time\": {\n    \"from\": \"now-1h\"\
-    ,\n    \"to\": \"now\"\n  },\n  \"timepicker\": {},\n  \"timezone\": \"browser\"\
-    ,\n  \"title\": \"OrderFlow \\u2014 Service Overview\",\n  \"uid\": \"orderflow-service-overview\"\
-    ,\n  \"version\": 1\n}"
+  orderflow-overview.json: |-
+    {
+      "annotations": {
+        "list": [
+          {
+            "builtIn": 1,
+            "datasource": {
+              "type": "grafana",
+              "uid": "-- Grafana --"
+            },
+            "enable": true,
+            "hide": true,
+            "iconColor": "rgba(0, 211, 255, 1)",
+            "name": "Annotations & Alerts",
+            "type": "dashboard"
+          }
+        ]
+      },
+      "description": "OrderFlow RED metrics (rate, errors, duration), pod saturation and logs for the K3s portfolio cluster.",
+      "editable": true,
+      "fiscalYearStartMonth": 0,
+      "graphTooltip": 1,
+      "id": null,
+      "links": [],
+      "liveNow": false,
+      "panels": [
+        {
+          "id": 1,
+          "title": "HTTP request rate",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": [
+            0,
+            0,
+            12,
+            7
+          ],
+          "targets": [
+            {
+              "expr": "sum(rate(http_requests_total{job=\"orderflow\"}[5m]))",
+              "refId": "A",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 2,
+          "title": "HTTP 5xx ratio",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": [
+            12,
+            0,
+            12,
+            7
+          ],
+          "targets": [
+            {
+              "expr": "100 * sum(rate(http_requests_total{job=\"orderflow\",status=\"5xx\"}[5m])) / clamp_min(sum(rate(http_requests_total{job=\"orderflow\"}[5m])), 0.001)",
+              "refId": "A",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "percent",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 3,
+          "title": "P95 request latency",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": [
+            0,
+            7,
+            12,
+            7
+          ],
+          "targets": [
+            {
+              "expr": "histogram_quantile(\n  0.95,\n  sum by (le) (\n    rate(http_request_duration_highr_seconds_bucket{job=\"orderflow\"}[5m])\n  )\n)",
+              "refId": "A",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "s",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 4,
+          "title": "Requests by status",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": [
+            12,
+            7,
+            12,
+            7
+          ],
+          "targets": [
+            {
+              "expr": "sum by (status) (rate(http_requests_total{job=\"orderflow\"}[5m]))",
+              "refId": "A",
+              "legendFormat": "{{status}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "reqps",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 5,
+          "title": "CPU cores by pod",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": [
+            0,
+            14,
+            12,
+            7
+          ],
+          "targets": [
+            {
+              "expr": "sum by (pod) (rate(container_cpu_usage_seconds_total{namespace=\"orderflow\",container!=\"\",container!=\"POD\"}[5m]))",
+              "refId": "A",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "cores",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 6,
+          "title": "Working-set memory by pod",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": [
+            12,
+            14,
+            12,
+            7
+          ],
+          "targets": [
+            {
+              "expr": "sum by (pod) (container_memory_working_set_bytes{namespace=\"orderflow\",container!=\"\",container!=\"POD\"})",
+              "refId": "A",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "bytes",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 7,
+          "title": "Container restarts (current counter)",
+          "type": "timeseries",
+          "datasource": {
+            "type": "prometheus",
+            "uid": "prometheus"
+          },
+          "gridPos": [
+            0,
+            21,
+            12,
+            7
+          ],
+          "targets": [
+            {
+              "expr": "sum by (pod) (kube_pod_container_status_restarts_total{namespace=\"orderflow\"})",
+              "refId": "A",
+              "legendFormat": "{{pod}}"
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "list",
+              "placement": "bottom",
+              "showLegend": true
+            },
+            "tooltip": {
+              "mode": "multi",
+              "sort": "desc"
+            }
+          }
+        },
+        {
+          "id": 8,
+          "title": "Recent OrderFlow logs",
+          "type": "logs",
+          "datasource": {
+            "type": "loki",
+            "uid": "loki"
+          },
+          "gridPos": [
+            12,
+            21,
+            12,
+            10
+          ],
+          "targets": [
+            {
+              "expr": "{namespace=\"orderflow\", app=\"orderflow\"}",
+              "refId": "A",
+              "legendFormat": ""
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "short",
+              "color": {
+                "mode": "palette-classic"
+              },
+              "custom": {
+                "drawStyle": "line",
+                "lineInterpolation": "smooth",
+                "lineWidth": 2,
+                "fillOpacity": 10,
+                "showPoints": "never",
+                "spanNulls": false
+              }
+            },
+            "overrides": []
+          },
+          "options": {
+            "showTime": true,
+            "showLabels": true,
+            "showCommonLabels": false,
+            "wrapLogMessage": true,
+            "enableLogDetails": true,
+            "dedupStrategy": "none",
+            "sortOrder": "Descending"
+          }
+        }
+      ],
+      "refresh": "30s",
+      "schemaVersion": 41,
+      "tags": [
+        "orderflow",
+        "observability",
+        "k3s"
+      ],
+      "templating": {
+        "list": []
+      },
+      "time": {
+        "from": "now-1h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "timezone": "browser",
+      "title": "OrderFlow — Service Overview",
+      "uid": "orderflow-service-overview",
+      "version": 1
+    }

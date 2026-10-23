@@ -1,4 +1,4 @@
-replicaCount: 2
+replicaCount: 1
 
 image:
   repository: REPLACE_WITH_ECR_REGISTRY/orderflow-api

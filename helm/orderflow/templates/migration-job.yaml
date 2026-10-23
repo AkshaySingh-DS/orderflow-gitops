@@ -5,6 +5,9 @@ metadata:
   name: {{ include "orderflow.fullname" . }}-migration-{{ .Release.Revision }}
   labels:
     {{- include "orderflow.labels" . | nindent 4 }}
+  annotations:
+    argocd.argoproj.io/hook: PreSync
+    argocd.argoproj.io/hook-delete-policy: BeforeHookCreation
 spec:
   backoffLimit: {{ .Values.migrations.backoffLimit }}
   ttlSecondsAfterFinished: 86400

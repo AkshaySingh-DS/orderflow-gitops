@@ -14,7 +14,7 @@ spec:
   maxReplicas: {{ .Values.autoscaling.maxReplicas }}
   behavior:
     scaleDown:
-      stabilizationWindowSeconds: 60
+      stabilizationWindowSeconds: 300
   metrics:
     - type: Resource
       resource:
